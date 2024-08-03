@@ -11,6 +11,8 @@
   "dependencies": {
     "@stripe/react-stripe-js": "^2.7.1",
     "@stripe/stripe-js": "^3.5.0",
+    "@supabase/ssr": "^0.4.0",
+    "@supabase/supabase-js": "^2.45.0",
     "anchor-pki": "^0.3.2",
     "next": "^14.2.4",
     "react": "^18",
