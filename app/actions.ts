@@ -4,11 +4,22 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
+import { headers } from "next/headers";
 
-export type LoginState = { error?: string; message?: string } | null;
-export type SignupState = { error?: string; message?: string } | null;
+export type LoginState = {
+  error?: string;
+  message?: string;
+} | null;
 
-export async function login(_prevState: LoginState, formData: FormData): Promise<LoginState> {
+export type SignupState = {
+  error?: string;
+  message?: string;
+} | null;
+
+export async function login(
+  _prevState: LoginState,
+  formData: FormData
+): Promise<LoginState> {
   const supabase = createClient();
 
   const data = {
@@ -30,7 +41,11 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
   redirect("/");
 }
 
-export async function signup(_prevState: SignupState, formData: FormData): Promise<SignupState> {
+
+export async function signup(
+  _prevState: SignupState,
+  formData: FormData
+): Promise<SignupState> {
   const supabase = createClient();
 
   const data = {
@@ -57,4 +72,43 @@ export async function signup(_prevState: SignupState, formData: FormData): Promi
     revalidatePath("/", "layout");
     return { message: "Rekisteröityminen onnistui!" };
   }
+}
+
+export const githubSignIn = async () => {
+  "use server";
+
+  // 1. Create a Supabase client
+  const supabase = createClient();
+  const origin = headers().get("origin");
+  console.log('origin:', origin)
+  
+  // 2. Sign in with GitHub
+  const { error, data } = await supabase.auth.signInWithOAuth({
+    provider: "github",
+    options: {
+      redirectTo: `${origin}/auth/callback`,
+    },
+  });
+  console.log('data:', data)
+  
+  if (error) {
+    console.log(error);
+  } else {
+      console.log('Redirecting to:', data.url);
+      
+    return redirect(data.url);
+  }
+  // 3. Redirect to landing page
+};
+
+export async function signOut() {
+  console.log('Signing out')
+  const supabase = createClient();
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    console.error('Sign out error:', error)
+    throw error; // Throw the error to handle it in the component
+  }
+  console.log('Sign out successful')
+  redirect("/login"); // Redirect to login page instead of home
 }
