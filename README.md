@@ -13,8 +13,8 @@ This project is an AI-enhanced e-commerce platform for fashion items, utilizing 
 
 ## Tech Stack
 
-- Frontend: Next.js
-- Backend: Supabase
+- Fullstack Meta-framework: Next.js
+- Backend Services: Supabase
 - Database: PostgreSQL (via Supabase)
 - Authentication: Supabase Auth (OAuth and email)
 - Payment Processing: Stripe
