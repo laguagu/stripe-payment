@@ -27,11 +27,11 @@ This project is an AI-enhanced e-commerce platform for fashion items, utilizing 
 2. Install dependencies:
 3. Set up environment variables in a `.env.local` file:
    
-``env
+```env
 -NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 -NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 -STRIPE_SECRET_KEY=your_stripe_secret_key
-``
+```
 
 4. Run the development server: `$ npm run dev`
 
