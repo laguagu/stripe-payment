@@ -10,8 +10,8 @@ export default function LoginForm() {
     // 1. Create a Supabase client
     const supabase = createClient();
     const origin = headers().get("origin");
-    console.log('origin:', origin)
-    
+    console.log("origin:", origin);
+
     // 2. Sign in with GitHub
     const { error, data } = await supabase.auth.signInWithOAuth({
       provider: "github",
@@ -19,13 +19,13 @@ export default function LoginForm() {
         redirectTo: `${origin}/auth/callback`,
       },
     });
-    console.log('data:', data)
-    
+    console.log("data:", data);
+
     if (error) {
       console.log(error);
     } else {
-        console.log('Redirecting to:', data.url);
-        
+      console.log("Redirecting to:", data.url);
+
       return redirect(data.url);
     }
     // 3. Redirect to landing page

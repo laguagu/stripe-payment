@@ -41,7 +41,6 @@ export async function login(
   redirect("/");
 }
 
-
 export async function signup(
   _prevState: SignupState,
   formData: FormData
@@ -80,8 +79,8 @@ export const githubSignIn = async () => {
   // 1. Create a Supabase client
   const supabase = createClient();
   const origin = headers().get("origin");
-  console.log('origin:', origin)
-  
+  console.log("origin:", origin);
+
   // 2. Sign in with GitHub
   const { error, data } = await supabase.auth.signInWithOAuth({
     provider: "github",
@@ -89,26 +88,26 @@ export const githubSignIn = async () => {
       redirectTo: `${origin}/auth/callback`,
     },
   });
-  console.log('data:', data)
-  
+  console.log("data:", data);
+
   if (error) {
     console.log(error);
   } else {
-      console.log('Redirecting to:', data.url);
-      
+    console.log("Redirecting to:", data.url);
+
     return redirect(data.url);
   }
   // 3. Redirect to landing page
 };
 
 export async function signOut() {
-  console.log('Signing out')
+  console.log("Signing out");
   const supabase = createClient();
-  const { error } = await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut();
   if (error) {
-    console.error('Sign out error:', error)
+    console.error("Sign out error:", error);
     throw error; // Throw the error to handle it in the component
   }
-  console.log('Sign out successful')
+  console.log("Sign out successful");
   redirect("/login"); // Redirect to login page instead of home
 }

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { createPaymentIntent } from '@/lib/actions';
+import { useState, useEffect } from "react";
+import { createPaymentIntent } from "@/lib/actions";
 
 export function useCreatePaymentIntent(amount: number) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -13,7 +13,7 @@ export function useCreatePaymentIntent(amount: number) {
         const secret = await createPaymentIntent(amount);
         setClientSecret(secret);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Tuntematon virhe'));
+        setError(err instanceof Error ? err : new Error("Tuntematon virhe"));
       }
     }
 

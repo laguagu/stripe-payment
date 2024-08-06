@@ -6,8 +6,7 @@ import javascript from "highlight.js/lib/languages/javascript";
 // import 'highlight.js/styles/monokai.css'; // Voit vaihtaa teeman tarpeen mukaan
 // import "highlight.js/styles/github.css"; // Vaalea teema
 // import 'highlight.js/styles/tokyo-night-dark.css';
-import 'highlight.js/styles/tokyo-night-dark.css';
-
+import "highlight.js/styles/tokyo-night-dark.css";
 
 hljs.registerLanguage("javascript", javascript);
 

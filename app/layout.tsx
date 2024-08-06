@@ -10,7 +10,6 @@ const fontSans = FontSans({
   display: "swap",
 });
 
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,8 +19,8 @@ export default function RootLayout({
     <html lang="fi">
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable,
+          "min-h-screen bg-background font-sans antialiased bg-gradient-to-b from-gray-50 to-gray-100",
+          fontSans.variable
         )}
       >
         {children}

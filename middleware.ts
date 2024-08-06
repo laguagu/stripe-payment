@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Salli pääsy julkisille reiteille ilman autentikointia
-  const publicRoutes = ['/login', '/auth/callback', '/signup'];
+  const publicRoutes = ["/login", "/auth/callback", "/signup"];
   if (publicRoutes.includes(request.nextUrl.pathname)) {
     return response;
   }
@@ -22,7 +22,6 @@ export async function middleware(request: NextRequest) {
   console.log("User found, continuing to the requested page");
   return response;
 }
-
 
 export const config = {
   matcher: [
