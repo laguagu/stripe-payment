@@ -66,7 +66,7 @@ RETURNS SETOF fashion_items AS $$
   ORDER BY embedding <-> input_embedding
   LIMIT 4;
 $$ LANGUAGE sql;
-
+```
 ## Authentication
 
 This project uses Supabase Auth for user authentication. It supports:
