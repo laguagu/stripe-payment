@@ -1,4 +1,4 @@
-# AI-powered Fashion E-commerce Platform
+# AI-powered E-commerce Platform
 
 This project is an AI-enhanced e-commerce platform for fashion items, utilizing Supabase for backend services and Stripe for payment processing.
 
