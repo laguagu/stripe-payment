@@ -1,55 +1,101 @@
 "use client";
-import { login, LoginState, signup, SignupState } from "@/app/actions";
-import { useFormState } from "react-dom";
+
+import { login, LoginState, signup, SignupState, githubSignIn } from "@/app/actions";
+import { useFormState, useFormStatus } from "react-dom";
 import Image from "next/image";
-import { githubSignIn } from "@/app/actions";
+import { useTransition } from "react";
 
 const initialLoginState: LoginState = null;
 const initialSignupState: SignupState = null;
 
+function SubmitButton({ children }: { children: React.ReactNode }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+    >
+      {pending ? "Loading..." : children}
+    </button>
+  );
+}
+
 export default function LoginPage() {
   const [loginState, loginAction] = useFormState(login, initialLoginState);
   const [signupState, signupAction] = useFormState(signup, initialSignupState);
+  const [isPending, startTransition] = useTransition();
 
   return (
-    <div>
-      <form className="p-20 bg-red-50">
-        <label htmlFor="email">Email:</label>
-        <input id="email" name="email" type="email" required />
-        <label htmlFor="password">Password:</label>
-        <input id="password" name="password" type="password" required />
-        <div className="gap-4 inline-flex flex-nowrap ">
-          <button formAction={loginAction}>Log in</button>
-          <button formAction={signupAction}>Sign up</button>
-        </div>
-        {loginState && (
-          <p className={loginState.error ? "text-red-500" : "text-green-500"}>
-            {loginState.error}
-          </p>
-        )}
-        {signupState && (
-          <p className={signupState.error ? "text-red-500" : "text-green-500"}>
-            {signupState.error || signupState.message}
-          </p>
-        )}
-      </form>
-      <form
-        action={githubSignIn}
-        className="flex-1 flex min-h-screen justify-center items-center"
-      >
-        <button className="hover:bg-gray-800 p-8 rounded-xl bg-zinc-800">
-          <Image
-            className="mx-auto mb-3"
-            src="/github-mark-white.png"
-            width={100}
-            height={100}
-            alt="GitHub logo"
-            priority
-            style={{ width: "auto", height: "auto" }}
-          />
-          <p className="text-white">Sign in with GitHub</p>
-        </button>
-      </form>
+    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
+      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login or Sign Up</h2>
+        <form action={loginAction} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email:
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password:
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+            />
+          </div>
+          <div className="flex space-x-2">
+            <SubmitButton>Log in</SubmitButton>
+            <form action={signupAction} className="inline">
+              <SubmitButton>Sign up</SubmitButton>
+            </form>
+          </div>
+          {loginState && loginState.error && (
+            <p className="text-red-500">{loginState.error}</p>
+          )}
+          {signupState && (signupState.error || signupState.message) && (
+            <p className={signupState.error ? "text-red-500" : "text-green-500"}>
+              {signupState.error || signupState.message}
+            </p>
+          )}
+        </form>
+      </div>
+      <div className="mt-8">
+        <form action={githubSignIn}>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="flex items-center justify-center bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-700 disabled:bg-gray-500"
+            onClick={() => startTransition(() => {})}
+          >
+            {isPending ? (
+              "Loading..."
+            ) : (
+              <>
+                <Image
+                  src="/github-mark-white.png"
+                  width={24}
+                  height={24}
+                  alt="GitHub logo"
+                  className="mr-2"
+                />
+                Sign in with GitHub
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -33,7 +33,7 @@ export async function login(
 
   if (error) {
     console.error("Login error:", error);
-    return { error: error.message };
+    return { error: error ? error.message : undefined };
   }
 
   console.log("Login successful");
