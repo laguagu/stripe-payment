@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# AI-powered E-commerce Platform
 
-## Getting Started
+This project is an AI-enhanced e-commerce platform for fashion items, utilizing Supabase for backend services and Stripe for payment processing.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- AI-powered product recommendations
+- User authentication (OAuth with GitHub and traditional email)
+- Product catalog with detailed item pages
+- Shopping cart functionality
+- Secure payment processing with Stripe
+- Responsive design for mobile and desktop
+
+## Tech Stack
+
+- Fullstack Meta-framework: Next.js
+- Backend Services: Supabase
+- Database: PostgreSQL (via Supabase)
+- Authentication: Supabase Auth (OAuth and email)
+- Payment Processing: Stripe
+- AI Integration: OpenAI for embeddings and recommendations
+- Image Storage: Supabase Storage
+
+## Setup
+
+1. Clone the repository
+2. Install dependencies:
+3. Set up environment variables in a `.env.local` file:
+   
+```env
+-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+-STRIPE_SECRET_KEY=your_stripe_secret_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Run the development server: `$ npm run dev`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+### Example
+1. Create a `fashion_items` table in your Supabase project:
 
-## Learn More
+```sql
+-- Ota pgvector-laajennus käyttöön
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
-To learn more about Next.js, take a look at the following resources:
+-- Luodaan fashion_items taulu
+CREATE TABLE fashion_items (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    image_url TEXT,
+    embedding VECTOR(1536)
+);
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+-- IVFFlat-indeksi upotuksille nopeuttamaan samankaltaisuushakuja kosinietäisyyden perusteella
+CREATE INDEX idx_fashion_items_embedding ON fashion_items USING ivfflat (embedding vector_cosine_ops);
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+-- Indeksi kategorialle nopeuttamaan hakuja kategorian perusteella
+CREATE INDEX idx_fashion_items_category ON fashion_items(category);
 
-## Deploy on Vercel
+-- Indeksi hinnalle nopeuttamaan hintapohjaisia hakuja ja lajittelua
+CREATE INDEX idx_fashion_items_price ON fashion_items(price);
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+-- Indeksi nimelle nopeuttamaan tekstihakuja
+CREATE INDEX idx_fashion_items_name ON fashion_items(name);
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+-- Luo funktio find_similar_fashion_items
+CREATE OR REPLACE FUNCTION find_similar_fashion_items (
+  input_id BIGINT, 
+  input_embedding vector(1536)
+) 
+RETURNS SETOF fashion_items AS $$
+  SELECT *
+  FROM fashion_items
+  WHERE id <> input_id
+  ORDER BY embedding <-> input_embedding
+  LIMIT 4;
+$$ LANGUAGE sql;
+
+-- Kategoriat-taulun luonti
+CREATE VIEW distinct_categories_view AS
+SELECT DISTINCT category
+FROM fashion_items;
+
+-- Typojen korjaus esimerkki miten voit korjata kuvien polut
+UPDATE fashion_items
+SET image_url = REPLACE(image_url, 'fashion_images', 'fashion-images');
+```
+## Authentication
+
+This project uses Supabase Auth for user authentication. It supports:
+
+- GitHub OAuth
+- Traditional email and password
+
+## AI Integration
+
+The project uses OpenAI's `text-embedding-ada-002` model to generate embeddings for fashion items. These embeddings are used to find similar items and provide recommendations.
+
+## Payment Processing
+
+Stripe is integrated for secure payment processing. Ensure you have set up your Stripe account and added the necessary keys to your environment variables.
+
+
+
