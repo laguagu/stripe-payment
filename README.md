@@ -106,3 +106,29 @@ The project uses OpenAI's `text-embedding-ada-002` model to generate embeddings 
 ## Payment Processing
 
 Stripe is integrated for secure payment processing. Ensure you have set up your Stripe account and added the necessary keys to your environment variables.
+
+## Embedding Search Cost Estimate for text-embedding-3-small OpenAI model
+
+### Assumptions:
+
+- 10 active users per day
+- Each user performs 5 searches per session
+- Average query length: 3 words (approximately 4 tokens)
+- 30 days in a month
+
+### Calculations:
+
+- **Daily searches**:
+  - 10 users * 5 searches = 50 searches/day
+- **Monthly searches**:
+  - 50 searches/day * 30 days = 1,500 searches/month
+- **Token usage per search**:
+  - 4 tokens per query
+- **Monthly token usage**:
+  - 1,500 searches * 4 tokens = 6,000 tokens/month
+- **Cost calculation**:
+  - 6,000 tokens / 1,000,000 * $0.020 = $0.00012 per month
+
+### Estimated monthly cost:
+
+- $0.00012 (0.012 cents)
