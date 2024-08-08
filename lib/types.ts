@@ -7,3 +7,4 @@ export interface FashionItem {
   image_url: string;
   embedding: string;
 }
+

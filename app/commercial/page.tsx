@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import ItemList from "@/components/commercial/ItemList";
-import CategoryFilter from "@/components/commercial/CategoryFilter";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import SmartSearch from '@/components/smart-search';
+import { FashionItem } from '@/lib/types';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +15,7 @@ async function getCategories() {
 
   if (error) {
     console.error("Error fetching categories:", error);
-    return [];
+    throw error;
   }
 
   return data?.map((item) => item.category) || [];
@@ -29,7 +30,7 @@ async function getItems(category: string | null) {
 
   if (error) {
     console.error("Error fetching items:", error);
-    return [];
+    throw error;
   }
 
   return data || [];
@@ -40,22 +41,39 @@ export default async function Home({
 }: {
   searchParams: { category: string | undefined };
 }) {
-  const categories = await getCategories();
-  const items = await getItems(searchParams.category || null);
+  let categories: string[] = [];
+  let items: FashionItem[] = [];
+  let error: Error | null = null;
+
+  try {
+    categories = await getCategories();
+    items = await getItems(searchParams.category || null);
+  } catch (e) {
+    error = e as Error;
+  }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-5xl font-extrabold mb-16 text-center">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
             Fashion Brand
           </span>
         </h1>
-        <CategoryFilter
-          categories={categories}
-          selectedCategory={searchParams.category}
-        />
-        <ItemList items={items} />
+        {error ? (
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              An error occurred while fetching data. Please try again later.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <SmartSearch 
+            initialItems={items} 
+            categories={categories} 
+            initialCategory={searchParams.category}
+          />
+        )}
       </div>
     </div>
   );

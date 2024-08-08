@@ -1,8 +1,13 @@
+import { Suspense } from 'react';
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { FashionItem } from "@/lib/types";
 import RelatedItems from "./RelatedItems";
 import Image from "next/image";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,26 +23,72 @@ async function getItem(id: string) {
 
   if (error) {
     console.error("Error fetching item:", error);
-    return null;
+    throw error;
   }
 
   return data;
 }
 
-export default async function ItemPage({ params }: { params: { id: string } }) {
-  const item = await getItem(params.id);
+function ItemDetails({ item }: { item: FashionItem }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{item.name}</CardTitle>
+        <p className="text-xl text-gray-600">{item.category}</p>
+      </CardHeader>
+      <CardContent>
+        <p className="text-3xl font-bold text-blue-600 mb-4">
+          ${item.price.toFixed(2)}
+        </p>
+        <p className="text-gray-700 text-lg leading-relaxed mb-6">
+          {item.description}
+        </p>
+        <Button size="lg">
+          Add to Cart
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 
-  if (!item)
+export default async function ItemPage({ params }: { params: { id: string } }) {
+  let item: FashionItem | null = null;
+  let error: Error | null = null;
+
+  try {
+    item = await getItem(params.id);
+  } catch (e) {
+    error = e as Error;
+  }
+
+  if (error) {
     return (
-      <div className="text-center text-2xl text-gray-600">Item not found</div>
+      <Alert variant="destructive">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
+          An error occurred while fetching the item. Please try again later.
+        </AlertDescription>
+      </Alert>
     );
+  }
+
+  if (!item) {
+    return (
+      <Alert>
+        <AlertTitle>Not Found</AlertTitle>
+        <AlertDescription>
+          The requested item could not be found.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-12 bg-gray-50">
       <Link href="/commercial">
-        <button className="mb-8 text-blue-600 hover:text-blue-800 transition duration-300 ease-in-out">
+        <Button variant="link" className="mb-8">
           ← Back to Home
-        </button>
+        </Button>
       </Link>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div className="relative h-96 md:h-[600px] rounded-xl overflow-hidden shadow-lg">
@@ -49,21 +100,13 @@ export default async function ItemPage({ params }: { params: { id: string } }) {
             className="transition duration-300 ease-in-out transform hover:scale-105"
           />
         </div>
-        <div className="space-y-6">
-          <h1 className="text-4xl font-bold text-gray-800">{item.name}</h1>
-          <p className="text-xl text-gray-600">{item.category}</p>
-          <p className="text-3xl font-bold text-blue-600">
-            ${item.price.toFixed(2)}
-          </p>
-          <p className="text-gray-700 text-lg leading-relaxed">
-            {item.description}
-          </p>
-          <button className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition duration-300 ease-in-out transform hover:-translate-y-1">
-            Add to Cart
-          </button>
-        </div>
+        <Suspense fallback={<Skeleton className="h-full w-full" />}>
+          <ItemDetails item={item} />
+        </Suspense>
       </div>
-      <RelatedItems currentEmbedding={item.embedding} currentId={item.id} />
+      <Suspense fallback={<Skeleton className="h-96 w-full mt-24" />}>
+        <RelatedItems currentEmbedding={item.embedding} currentId={item.id} />
+      </Suspense>
     </div>
   );
 }
