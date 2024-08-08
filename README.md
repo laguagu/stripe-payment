@@ -101,7 +101,7 @@ This project uses Supabase Auth for user authentication. It supports:
 
 ## AI Integration
 
-The project uses OpenAI's `text-embedding-3-smal` model to generate embeddings for fashion items. These embeddings are used to find similar items and provide recommendations.
+The project uses OpenAI's `text-embedding-3-small` model to generate embeddings for fashion items. These embeddings are used to find similar items and provide recommendations.
 
 ## Payment Processing
 
