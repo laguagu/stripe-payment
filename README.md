@@ -10,6 +10,7 @@ This project is an AI-enhanced e-commerce platform for fashion items, utilizing 
 - Shopping cart functionality
 - Secure payment processing with Stripe
 - Responsive design for mobile and desktop
+- **Smart search functionality with text and semantic search capabilities**
 
 ## Tech Stack
 
@@ -26,7 +27,7 @@ This project is an AI-enhanced e-commerce platform for fashion items, utilizing 
 1. Clone the repository
 2. Install dependencies:
 3. Set up environment variables in a `.env.local` file:
-   
+
 ```env
 -NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 -NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -38,6 +39,7 @@ This project is an AI-enhanced e-commerce platform for fashion items, utilizing 
 ## Database Setup
 
 ### Example
+
 1. Create a `fashion_items` table in your Supabase project:
 
 ```sql
@@ -89,6 +91,7 @@ FROM fashion_items;
 UPDATE fashion_items
 SET image_url = REPLACE(image_url, 'fashion_images', 'fashion-images');
 ```
+
 ## Authentication
 
 This project uses Supabase Auth for user authentication. It supports:
@@ -103,6 +106,3 @@ The project uses OpenAI's `text-embedding-ada-002` model to generate embeddings 
 ## Payment Processing
 
 Stripe is integrated for secure payment processing. Ensure you have set up your Stripe account and added the necessary keys to your environment variables.
-
-
-
