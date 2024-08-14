@@ -24,12 +24,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-
 export async function login(
   _prevState: LoginState,
   formData: FormData
 ): Promise<LoginState> {
-
   const data = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
@@ -82,7 +80,6 @@ export async function signup(
 }
 
 export const githubSignIn = async () => {
-
   // 1. Create a Supabase client
   const origin = headers().get("origin");
   console.log("origin:", origin);
@@ -120,33 +117,62 @@ export async function signOut() {
 
 // Apufunktio stop-sanojen poistamiseen
 function removeStopWords(text: string): string {
-  const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by']);
-  return text.toLowerCase().split(' ').filter(word => !stopWords.has(word)).join(' ');
+  const stopWords = new Set([
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+  ]);
+  return text
+    .toLowerCase()
+    .split(" ")
+    .filter((word) => !stopWords.has(word))
+    .join(" ");
 }
 
-export async function searchItems(searchQuery: string | null, category: string | undefined): Promise<FashionItem[]> {
+export async function searchItems(
+  searchQuery: string | null,
+  category: string | undefined
+): Promise<FashionItem[]> {
   console.log("Searching for:", searchQuery, "in category:", category);
 
   try {
+    // Aloita kysely valitsemalla kaikki sarakkeet fashion_items-taulusta
     let query = supabase.from("fashion_items").select("*");
-    
+
+    // Lisää kategoria-suodatus, jos kategoria on määritelty ja se ei ole "All"
     if (category && category !== "All") {
       query = query.eq("category", category);
       console.log("Filtering by category:", category);
     }
-    
+
+    // Lisää tekstihaku, jos hakusana on annettu
     if (searchQuery) {
-      query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      // Hae tuotteita, joiden nimi tai kuvaus sisältää hakusanan (case-insensitive)
+      query = query.or(
+        `name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`
+      );
       console.log("Using text search for:", searchQuery);
     }
-    
+
+    // Suorita tekstihakukysely ja rajoita tulokset 50:een
     const { data: textResults, error: textError } = await query.limit(50);
-    
+
     if (textError) throw textError;
-    
 
     console.log("Text search results count:", textResults.length);
 
+    // Jos tekstihaku tuotti tuloksia tai hakusanaa ei annettu, palauta tulokset
     if (textResults.length > 0 || !searchQuery) {
       console.log("Returning text search results or all items");
       return textResults as FashionItem[];
@@ -154,46 +180,74 @@ export async function searchItems(searchQuery: string | null, category: string |
 
     // Jos tekstihaku ei tuottanut tuloksia ja hakusana on annettu, käytetään semanttista hakua
     console.log("No text search results, using semantic search");
+    // Poista stop-sanat hakusanasta optimointia varten
     const optimizedQuery = removeStopWords(searchQuery);
 
-    const { data: existingEmbedding, error: embeddingError } = await supabase
-      .from('search_embeddings')
-      .select('embedding')
-      .eq('search_query', optimizedQuery)
-      .single();
+    // Tarkista, onko hakusanalle jo olemassa embedding tietokannassa
+    if (textResults.length === 0 && searchQuery) {
+      console.log("No text search results, using semantic search");
+      const optimizedQuery = removeStopWords(searchQuery);
+      console.log("Optimized query:", optimizedQuery);
 
-    let embedding;
-    if (existingEmbedding) {
-      console.log("Using existing embedding from database");
-      embedding = existingEmbedding.embedding;
-    } else {
-      console.log("Creating new embedding with OpenAI");
-      const embeddingResponse = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: optimizedQuery,
-      });
-      embedding = embeddingResponse.data[0].embedding;
+      const { data: existingEmbedding, error: embeddingError } = await supabase
+        .from("search_embeddings")
+        .select("embedding")
+        .eq("search_query", optimizedQuery)
+        .single();
 
-      await supabase.from('search_embeddings').insert({
-        search_query: optimizedQuery,
-        embedding: embedding
+      let embedding;
+      if (existingEmbedding) {
+        console.log("Using existing embedding from database");
+        embedding = existingEmbedding.embedding;
+      } else {
+        console.log("Creating new embedding with OpenAI");
+        const embeddingResponse = await openai.embeddings.create({
+          model: "text-embedding-3-small",
+          input: optimizedQuery,
+        });
+        embedding = embeddingResponse.data[0].embedding;
+        console.log("New embedding created:", embedding.slice(0, 5) + "...");
+
+        await supabase.from("search_embeddings").insert({
+          search_query: optimizedQuery,
+          embedding: embedding,
+        });
+        console.log("New embedding saved to database");
+      }
+
+      console.log("Calling find_similar_fashion_items with params:", {
+        input_id: -1,
+        input_embedding: embedding.slice(0, 5) + "...",
+        input_category: category && category !== "All" ? category : null
       });
-      console.log("New embedding saved to database");
+
+      const { data: semanticResults, error: semanticError } = await supabase.rpc(
+        "find_similar_fashion_items",
+        { 
+          input_id: -1,
+          input_embedding: embedding,
+          input_category: category && category !== "All" ? category : null
+        }
+      );
+      
+      if (semanticError) {
+        console.error("Semantic search error:", semanticError);
+        throw semanticError;
+      }
+      
+      console.log("Semantic search raw results:", semanticResults?.slice(0, 5));
+      console.log("Semantic search results count:", semanticResults?.length);
+      
+      // Suodata tulokset TypeScript-puolella
+      const filteredResults = semanticResults?.filter((item: { similarity: number; }) => item.similarity > 0.2) || [];
+      console.log("Filtered semantic search results:", filteredResults.slice(0, 5));
+      console.log("Filtered semantic search results count:", filteredResults.length);
+      
+      return filteredResults as FashionItem[];
     }
 
-    const { data: semanticResults, error: semanticError } = await supabase.rpc(
-      "find_similar_fashion_items",
-      { 
-        input_id: -1,
-        input_embedding: embedding,
-        category: category !== "All" ? category : null
-      }
-    );
-
-    if (semanticError) throw semanticError;
-    console.log("Semantic search results count:", semanticResults.length);
-    return semanticResults as FashionItem[];
-
+    console.log("Returning text search results or all items");
+    return textResults as FashionItem[];
   } catch (error) {
     console.error("Error in smart search:", error);
     return [];

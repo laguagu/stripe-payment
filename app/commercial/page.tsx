@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import SmartSearch from '@/components/smart-search';
+import ClientSeach from "@/components/client-seach"; 
+import SmartAutomaticSearch from "@/components/smart-automatic-search";
 import { FashionItem } from '@/lib/types';
 
 const supabase = createClient(
@@ -35,7 +36,16 @@ async function getItems(category: string | null) {
 
   return data || [];
 }
+// async function getItems() {
+//   const { data, error } = await supabase.from("fashion_items").select("*");
 
+//   if (error) {
+//     console.error("Error fetching items:", error);
+//     throw error;
+//   }
+
+//   return data || [];
+// }
 export default async function Home({
   searchParams,
 }: {
@@ -48,6 +58,7 @@ export default async function Home({
   try {
     categories = await getCategories();
     items = await getItems(searchParams.category || null);
+    // items = await getItems();
   } catch (e) {
     error = e as Error;
   }
@@ -68,7 +79,7 @@ export default async function Home({
             </AlertDescription>
           </Alert>
         ) : (
-          <SmartSearch 
+          <SmartAutomaticSearch 
             initialItems={items} 
             categories={categories} 
             initialCategory={searchParams.category}
